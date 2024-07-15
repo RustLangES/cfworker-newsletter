@@ -26,7 +26,6 @@
   buildInputs = with pkgs; [
     openssl
     pkg-config
-    autoPatchelfHook
   ]
   ++ lib.optionals stdenv.buildPlatform.isDarwin [
     pkgs.libiconv
@@ -35,10 +34,11 @@
   #   pkgs.libxkbcommon.dev
   # ];
 
-  worker = craneLib.buildPackage {
+  worker = name: craneLib.buildPackage {
     doCheck = false;
+    pname = "newsletter";
     src = craneLib.cleanCargoSource (craneLib.path ./.);
-    buildPhaseCargoCommand = "HOME=$(mktemp -d fake-homeXXXX) worker-build --release --mode no-install";
+    buildPhaseCargoCommand = "HOME=$(mktemp -d fake-homeXXXX) worker-build --release --mode no-install . -- -p crates/${name}";
 
     installPhaseCommand = ''
       cp -r ./build $out
@@ -53,11 +53,18 @@
 in
 {
   # `nix build`
-  packages.default = worker;
+  packages = rec {
+    default = api;
+    api = worker "api";
+    sendmail = worker "sendmail";
+  };
 
   # `nix develop`
   devShells.default = craneLib.devShell {
-    buildInputs = nativeBuildInputs ++ buildInputs;
+    buildInputs = with pkgs; nativeBuildInputs
+      ++ buildInputs ++ [
+        cargo-make
+      ];
     # pkgs.nodePackages.wrangler
   };
 }

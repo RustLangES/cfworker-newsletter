@@ -1,0 +1,23 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+queue = ["worker/queue"]
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
+codegen-units = 1
+
+[dependencies]
+serde.workspace = true
+worker.workspace = true
