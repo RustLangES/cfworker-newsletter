@@ -38,10 +38,10 @@
     doCheck = false;
     pname = "newsletter";
     src = craneLib.cleanCargoSource (craneLib.path ./.);
-    buildPhaseCargoCommand = "HOME=$(mktemp -d fake-homeXXXX) worker-build --release --mode no-install . -- -p crates/${name}";
+    buildPhaseCargoCommand = "HOME=$(mktemp -d fake-homeXXXX) RUST_LOG=trace worker-build --release --mode no-install crates/${name}";
 
     installPhaseCommand = ''
-      cp -r ./build $out
+      cp -r crates/${name}/build $out
     '';
 
     nativeBuildInputs = with pkgs; nativeBuildInputs ++ [
