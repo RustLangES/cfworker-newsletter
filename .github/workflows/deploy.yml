@@ -7,8 +7,8 @@ on:
       - main
     paths:
       - ".github/workflows/deploy.yml"
-      - "wrangler.toml"
-      - "src/**/**.rs"
+      - "crates/**/wrangler.toml"
+      - "crates/**/src/**/**.rs"
       - "Cargo.toml"
       - "Cargo.lock"
       - "rust-toolchain.toml"
@@ -28,6 +28,11 @@ jobs:
   deploy:
     needs: [check]
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        path:
+          - api
+          - sendmail
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,12 +43,13 @@ jobs:
           cargo install worker-build
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
-        env:
+        # env:
           # YOUR_SECRET: ${{ secrets.YOUR_SECRET }}
           # YOUR_OTHER_SECRET: ${{ secrets.YOUR_OTHER_SECRET }}
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: "crates/${{ matrix.path }}"
           # secrets: |
           #   YOUR_SECRET
           #   YOUR_OTHER_SECRET
