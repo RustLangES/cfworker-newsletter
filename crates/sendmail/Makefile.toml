@@ -1,0 +1,12 @@
+[tasks.run-sendmail-nix]
+condition.env_true = ["IN_NIX_SHELL"]
+command = "wrangler"
+args = ["dev"]
+
+[tasks.run-sendmail-npx]
+condition.env_false = ["IN_NIX_SHELL"]
+command = "npx"
+args = ["wrangler", "dev"]
+
+[tasks.run-api]
+dependencies = ["run-sendmail-nix", "run-sendmail-npx"]

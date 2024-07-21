@@ -1,0 +1,12 @@
+[tasks.run-api-nix]
+condition.env_true = ["IN_NIX_SHELL"]
+command = "wrangler"
+args = ["dev"]
+
+[tasks.run-api-npx]
+condition.env_false = ["IN_NIX_SHELL"]
+command = "npx"
+args = ["wrangler", "dev"]
+
+[tasks.run-api]
+dependencies = ["run-api-nix", "run-api-npx"]
