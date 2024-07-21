@@ -38,5 +38,13 @@ script.pre = "npx wrangler d1 create mail-subscriptions"
 script.main = "npx wrangler d1 apply mail-subscriptions"
 script.post = "echo 'Your Database has created with name: mail-subscriptions'"
 
+[tasks.migration-new]
+command = "wrangler"
+args = ["d1", "migrations", "create", "mail-subscriptions"]
+
+[tasks.migration-apply]
+command = "wrangler"
+args = ["d1", "migrations", "apply", "mail-subscriptions"]
+
 [tasks.dev]
 dependencies = ["run-api", "run-sendmail"]
