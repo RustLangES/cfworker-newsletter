@@ -6,7 +6,7 @@ skip_crate_env_info = true
 
 [env]
 CARGO_MAKE_WORKSPACE_EMULATION = true
-CARGO_MAKE_CRATE_WORKSPACE_MEMBERS = [ "./crates/api", "./crates/sendmail" ]
+CARGO_MAKE_CRATE_WORKSPACE_MEMBERS = ["./crates/api", "./crates/sendmail"]
 
 [tasks.default]
 alias = "dev"
