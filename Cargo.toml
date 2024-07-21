@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/api", "crates/sendmail"]
+members = ["crates/api", "crates/models", "crates/sendmail"]
 
 [workspace.package]
 name = "newsletter"
