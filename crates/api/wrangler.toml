@@ -11,6 +11,12 @@ compatibility_date = "2024-03-14"
 [build]
 command = "worker-build --release"
 
+[[d1_databases]]
+binding = "DB"
+database_name = "mail-subscriptions"
+# Replace this if is needed
+database_id = "e75396da-6153-4389-b66b-bbee37496832"
+
 [[rules]]
 globs = ["**/*.wasm"]
 type = "CompiledWasm"
