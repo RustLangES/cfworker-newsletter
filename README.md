@@ -2,7 +2,7 @@
 <a href="./README_EN.md">EN</a>
 </div>
 
-# Template Cloudflare Worker
+# Newsletter en Cloudflare Workers
 
 Este es un template para empezar con workers de Cloudflare escritos en Rust.
 
@@ -35,10 +35,33 @@ Para construir y desplegar este proyecto, necesitarás lo siguiente:
 - [worker-build](https://crates.io/crates/worker-build)
     - [wasm-pack](https://rustwasm.github.io/wasm-pack/)
 
-### Pruebas Locales
+- [cargo-make](https://crates.io/crates/cargo-make) (Opcional)
+
+### Entorno Local
 
 > [!IMPORTANT]
 > Para probar el worker localmente, revisa la [documentacion oficial](https://developers.cloudflare.com/workers/testing/local-development)
+
+
+Necesitas levantar la migracion local, para ello corre el siguiente comando
+```sh
+# Crea la base de datos
+npx wrangler d1 create mail-subscriptions &&
+# aplica la migracion
+npx wrangler d1 apply mail-subscriptions
+```
+
+O si tienes instalado cargo-make, simplemente ejecuta
+```sh
+cargo make init
+```
+
+
+Ahora a desarrollar
+```sh
+cargo make dev
+```
+
 
 ### Despliegue Automático
 
