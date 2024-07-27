@@ -35,7 +35,7 @@ script.post = "echo 'Your Database has created with name: mail-subscriptions'"
 [tasks.init-npx]
 condition.env_false = ["IN_NIX_SHELL"]
 script.pre = "npx wrangler d1 create mail-subscriptions"
-script.main = "npx wrangler d1 apply mail-subscriptions"
+script.main = "npx wrangler d1 migrations apply mail-subscriptions"
 script.post = "echo 'Your Database has created with name: mail-subscriptions'"
 
 [tasks.migration-new]
