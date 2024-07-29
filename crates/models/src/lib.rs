@@ -1,17 +1,29 @@
+use serde::{Deserialize, Serialize};
+use worker::D1Database;
 
-
+#[derive(Default, Deserialize)]
 pub struct Mail {
     id: i32,
-    email: String, 
+    email: String,
+    #[serde(rename = "type")]
     type_mail: i32,
     subscribed_from: i32,
     subscribe_at: String,
-    last_email_sent_at: String, //de tipo date time
-    unsubscribed_at: String, // de tipo datetime
-    status: String,
-    bounce_count: i32, 
+    // de tipo date time
+    last_email_sent_at: String,
+    // de tipo datetime
+    unsubscribed_at: String,
+    status: SubscriptionStatus,
+    bounce_count: i32,
     country: String,
     user_agent: String,
+}
+
+#[derive(Default, Deserialize)]
+pub struct MailRequest {
+    email: String,
+    type_mail: i32,
+    subscribed_from: i32,
 }
 
 pub struct SubscriptionType {
@@ -20,40 +32,58 @@ pub struct SubscriptionType {
     description: String,
 }
 
+#[derive(Default, Deserialize, Serialize, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum SubscriptionStatus {
+    #[default]
+    Active,
+    Unsubscribed,
+    Bounced,
+}
+
+pub enum SubscriptionFrom {
+    Discord,
+    Website,
+    SocialMedia,
+}
+
 impl Mail {
-    fn new(id:i32, email:&str, type_mail:i32, subscribed_from:i32,
-           subscribe_at:&str, last_email_sent_at:&str, unsubscribed_at:&str,
-           status:&str, bounce_count:i32, country:&str, user_agent:&str) -> Self {
-        Self { 
-            id,
+    pub fn new<T: ToString>(
+        MailRequest {
+            email,
+            type_mail,
+            subscribed_from,
+        }: MailRequest,
+        country: T,
+        user_agent: T,
+    ) -> Self {
+        Self {
+            id: 0,
             email: email.to_string(),
             type_mail,
             subscribed_from,
-            subscribe_at: subscribe_at.to_string(),
-            last_email_sent_at: last_email_sent_at.to_string(),
-            unsubscribed_at: unsubscribed_at.to_string(),
-            status: status.to_string(),
-            bounce_count,
             country: country.to_string(),
             user_agent: user_agent.to_string(),
+            ..Default::default()
         }
     }
 
-    //aca no se si inicializar los datos con valores por defectos
-    // asi que la funcion esta
-    fn default(&mut self, id:i32) -> Self {
-        Self {
-            id,
-            email: String::from(""),
-            type_mail: 0 as i32,
-            subscribed_from: 0 as i32, //Aca no deberia ponerle nada
-            subscribe_at:String::from(""), //No sabria cual es el timestam para ponerle como default
-            last_email_sent_at:String::from(""),
-            unsubscribed_at:String::from(""),
-            status: String::from("active"),
-            bounce_count: 0 as i32,
-            country:String::from(""),
-            user_agent: String::from(""),
+    pub async fn insert(&self, db: &D1Database) -> worker::Result<bool> {
+        let prepare = db.prepare("INSERT INTO email (email, type, subscribed_from, status, country, user_agent) VALUES (?1, ?2, ?3, ?4, ?5, ?6)");
+        let bind = prepare.bind(&[
+            self.email.clone().into(),
+            self.type_mail.into(),
+            self.subscribed_from.into(),
+            format!("{:?}", self.status).into(),
+            self.country.clone().into(),
+            self.user_agent.clone().into(),
+        ]);
+        let res = bind?.run().await?;
+
+        if let Some(err) = res.error() {
+            return Err(worker::Error::from(err));
         }
+
+        Ok(res.success())
     }
 }
