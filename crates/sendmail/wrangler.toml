@@ -1,4 +1,4 @@
-name = "newletter-api"
+name = "newletter-sendmail"
 workers_dev = true
 main = "build/worker/shim.mjs"
 compatibility_date = "2024-03-14"
