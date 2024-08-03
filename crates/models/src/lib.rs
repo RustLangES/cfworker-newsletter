@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use worker::D1Database;
+use worker::{d1, D1Database, D1PreparedStatement};
 
 #[derive(Default, Deserialize)]
 pub struct Mail {
@@ -45,6 +45,34 @@ pub enum SubscriptionFrom {
     Discord,
     Website,
     SocialMedia,
+}
+
+impl SubscriptionType{
+    pub fn new(&mut self, id:i32, name:&str, description:&str) -> Self {
+        Self {
+            id,
+            name: name.to_string(),
+            description: description.to_string()
+        }
+    }
+
+    pub async fn insert(&self, db:&D1Database)-> worker::Result<bool>{
+        // prepare statement to add values into subscription_type table
+        let prepare:D1PreparedStatement = db.prepare("INSERT INTO subscription_type (id,name,description) VALUES (?1,?2,?3)");
+        // binding values into prepare
+        let bind = prepare.bind(&[
+            self.id.into(),
+            self.name.clone().into(),
+            self.description.clone().into(),
+        ]);
+        let resultado = bind?.run().await?;
+        //handling error
+        if let Some(err) = resultado.error() {
+            return Err(worker::Error::from(err));
+        }
+        //it's ok!
+        Ok(resultado.success())
+    }
 }
 
 impl Mail {
