@@ -14,34 +14,61 @@ on:
       - "rust-toolchain.toml"
 
 jobs:
-  check:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - name: checks
-        run: |
-          cargo fmt --all --check
+  quality-gate:
+    uses: ./.github/workflows/quality-gate.yml
+    with:
+      checks-command: "--all --check"
+      clippy-command: "-- -D warnings"
+      tests-command: "test"
 
   deploy:
-    needs: [check]
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        path:
-          - api
-          - sendmail
+    needs: [quality-gate]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - name: Install worker-build
+
+      - name: Install nix
+        uses: nixbuild/nix-quick-install-action@v30
+        with:
+          nix_conf: |
+            keep-env-derivations = true
+            keep-outputs = true
+
+      - name: Restore and save Nix store
+        uses: nix-community/cache-nix-action@v6
+        with:
+          primary-key: build-${{ runner.os }}-${{ hashFiles('**/*.nix', 'flake.lock') }}
+          restore-prefixes-first-match: build-${{ runner.os }}-
+
+      - name: Build both workers
+        run: nix build
+
+      - name: Fix up wrangler toml
         run: |
-          cargo install worker-build
-      - name: Deploy
+
+          fix-up () {
+            echo "---- Before"
+            cat crates/$1/wrangler.toml
+            
+            cat crates/$1/wrangler.toml | sed "s/main = \"build/main = \"result\/$1/" | sed 's/command = "worker-build --release"/command = "echo dummy build"/' >| crates/$1/wrangler.prod.toml
+            
+            echo "---- After"
+            cat crates/$1/wrangler.prod.toml
+          }
+
+          echo "----- API -----"
+          fix-up api
+
+          echo "----- SENDMAIL -----"
+          fix-up sendmail
+
+      - name: Clone result
+        run: |
+          cp -r result crates/api/result
+          cp -r result crates/sendmail/result
+
+      - name: Deploy API
         uses: cloudflare/wrangler-action@v3
         # env:
           # YOUR_SECRET: ${{ secrets.YOUR_SECRET }}
@@ -49,7 +76,22 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: "crates/${{ matrix.path }}"
+          workingDirectory: "crates/api"
+          command: deploy -c wrangler.prod.toml
+          # secrets: |
+          #   YOUR_SECRET
+          #   YOUR_OTHER_SECRET
+
+      - name: Deploy Sendmail
+        uses: cloudflare/wrangler-action@v3
+        # env:
+          # YOUR_SECRET: ${{ secrets.YOUR_SECRET }}
+          # YOUR_OTHER_SECRET: ${{ secrets.YOUR_OTHER_SECRET }}
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: "crates/sendmail"
+          command: deploy -c wrangler.prod.toml
           # secrets: |
           #   YOUR_SECRET
           #   YOUR_OTHER_SECRET

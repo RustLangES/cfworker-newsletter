@@ -2,12 +2,11 @@
 members = ["crates/api", "crates/models", "crates/sendmail"]
 
 [workspace.package]
-name = "newsletter"
 version = "0.1.0"
 edition = "2021"
 description = "RustLangES Newletter workspace"
 repository = "https://github.com/RustLangES/cfworker-newsletter."
 
 [workspace.dependencies]
-worker = { version = "0.3", features = ["d1"] }
+worker = { version = "0.5", features = ["d1"] }
 serde = { version = "1", features = ["serde_derive"] }
