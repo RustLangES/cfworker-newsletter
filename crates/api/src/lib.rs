@@ -1,4 +1,4 @@
-use worker::*;
+use worker::{event, Context, Env, Request, Response, Result, Router};
 
 // This event is called on start worker
 // So we use the `start` event to initialize our tracing subscriber when the worker starts.
@@ -15,6 +15,9 @@ fn start() {
 // Docs: https://github.com/cloudflare/workers-rs#or-use-the-router
 // Example: https://github.com/cloudflare/workers-rs/blob/main/examples/router/src/lib.rs
 //
+
+/// # Errors
+/// This function may return an error if Router::run fails to handle the HTTP request.
 #[event(fetch)]
 pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
     Router::new().run(req, env).await
